@@ -16,10 +16,12 @@ Image rgb_to_grayscale(const Image& im)
   Image gray(im.w,im.h,1); // create a new grayscale image (note: 1 channel)
   
   // TODO: calculate the pixels of 'gray'
-  
-  
-  NOT_IMPLEMENTED();
-  
+  for(int i = 0; i < im.w; i++){
+    for (int j = 0; j < im.h; j++){
+      gray(i,j,0) = .299*im(i,j,0) + .587*im(i,j,1) + .114*im(i,j,2);
+    }
+  }
+
   return gray;
   }
 
@@ -52,10 +54,11 @@ void shift_image(Image& im, int c, float v)
   {
   assert(c>=0 && c<im.c); // needs to be a valid channel
   
-  // TODO: shift all the pixels at the specified channel
-  
-  NOT_IMPLEMENTED();
-  
+  //shift all the pixels at the specified channel
+  for(int i=0; i< im.w;i++)for(int j=0; j<im.h;j++)
+    {
+      im(i,j,c) += v;
+    }
   }
 
 // HW0 #8
@@ -66,10 +69,10 @@ void scale_image(Image& im, int c, float v)
   {
   assert(c>=0 && c<im.c); // needs to be a valid channel
   
-  // TODO: scale all the pixels at the specified channel
-  
-  NOT_IMPLEMENTED();
-  
+  for(int i=0; i< im.w;i++)for(int j=0; j<im.h;j++)
+    {
+      im(i,j,c) *= v;
+    }  
   }
 
 
@@ -77,9 +80,11 @@ void scale_image(Image& im, int c, float v)
 // Image& im: input image to be modified in-place
 void clamp_image(Image& im)
   {
-  // TODO: clamp all the pixels in all channel to be between 0 and 1
-  
-  NOT_IMPLEMENTED();
+  //clamp all the pixels in all channel to be between 0 and 1
+    for(int i=0; i< im.w;i++)for(int j=0; j<im.h;j++)for(int c=0; c<im.c;c++)
+    {
+      im(i,j,c) = min(max(im(i,j,c),(float)0),(float)1);
+    }
   
   }
 
@@ -101,9 +106,43 @@ void rgb_to_hsv(Image& im)
   {
   assert(im.c==3 && "only works for 3-channels images");
   
-  // TODO: Convert all pixels from RGB format to HSV format
-  
-  NOT_IMPLEMENTED();
+  // Convert all pixels from RGB format to HSV format
+    for(int i = 0;i < im.w; i++)for(int j=0;j<im.h;j++){
+      float R = im(i,j,0);
+      float G = im(i,j,1);
+      float B = im(i,j,2);
+
+      //Compute V
+      float  V = max(R,G,B);
+
+      //Compute S
+      float m = min(R,G,B);
+      float C = V - m;
+      float  S = 0; 
+      if(V != 0){
+        S = C/V;
+      }
+
+      //Compute H
+      float Hp = 0;
+      if(C != 0){
+        if(V == R){
+          Hp = (G - B)/C; 
+        } else if (V == G){
+          Hp = (B - R)/C + 2;
+        } else {
+          Hp = (R - G)/C + 4;
+        }
+      }
+      float H = Hp/6;
+      if(Hp < 0){
+        H = Hp/6 + 1;
+      }
+
+      im(i,j,0) = H;
+      im(i,j,1) = S;
+      im(i,j,2) = V;
+    }
   
   }
 
@@ -114,9 +153,51 @@ void hsv_to_rgb(Image& im)
   assert(im.c==3 && "only works for 3-channels images");
   
   // TODO: Convert all pixels from HSV format to RGB format
-  
-  NOT_IMPLEMENTED();
-  
+  // Convert all pixels from RGB format to HSV format
+    for(int i = 0;i < im.w; i++)for(int j=0;j<im.h;j++){
+      float H = im(i,j,0);
+      float S = im(i,j,1);
+      float V = im(i,j,2);
+
+      float C = V*S;
+      float X = C * (1 - abs((fmod(6*H,  2) - 1)));
+      float m = V - C;
+
+      float R = C;
+      float G = 0;
+      float B = X;
+
+      if (0 <= H && H < 1/(6.0f)){
+        R = C;
+        G = X;
+        B = 0;
+
+      } else if (1/(6.0f) <= H && H < 2/(6.0f)){
+        R = X;
+        G = C;
+        B = 0;
+
+      } else if (2/(6.0f) <= H && H < 3/(6.0f)){
+        R = 0;
+        G = C;
+        B = X;
+
+      } else if (3/(6.0f) <= H && H < 4/(6.0f)){
+        R = 0;
+        G = X;
+        B = C;
+
+      } else if (4/(6.0f) <= H && H < 5/(6.0f)){
+        R = X;
+        G = 0;
+        B = C;
+
+      }
+
+      im(i,j,0) = R + m;
+      im(i,j,1) = G + m;
+      im(i,j,2) = B + m;
+    }  
   }
 
 // HW0 #9
