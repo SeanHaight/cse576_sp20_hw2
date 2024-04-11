@@ -47,16 +47,11 @@ float Image::pixel_bilinear(float x, float y, int c) const
 Image nearest_resize(const Image& im, int w, int h)
   {
   Image ret(w,h,im.c);
+  float x_rescale = w/((float) im.w);
+  float y_rescale = h/((float) im.h);
   for (int i = 0; i < w; i ++) for (int j = 0; j < h; j++) for (int ch = 0; ch < im.c; ch ++){
-      ret(i,j,ch) = im.pixel_nearest(i, j, ch);
+      ret(i,j,ch) = im.pixel_nearest((i + .5)/x_rescale - .5, (j + .5)/y_rescale - .5, ch);
   }
-
-  save_image(ret, "output/first_resize_attempt");
-  // TODO: Your code here
-  
-  NOT_IMPLEMENTED();
-  
-  
   
   return ret;
   }
