@@ -30,14 +30,22 @@ float Image::pixel_bilinear(float x, float y, int c) const
   {
   // Since you are inside class Image you can
   // use the member function pixel(a,b,c)
-  
-  
+  int left_x = (int) x;
+  if (x < 0) left_x = left_x - 1;
+  int right_x = left_x + 1;
+  int up_y = (int) y;
+  if (y < 0) up_y = up_y - 1;
+  int down_y = up_y + 1;
+
+  float sum = 0;
+  sum = sum + clamped_pixel(left_x, up_y, c)*(right_x - x)*(down_y - y);
+  sum = sum + clamped_pixel(right_x, up_y, c)*(x - left_x)*(down_y - y);
+  sum = sum + clamped_pixel(left_x, down_y, c)*(right_x - x)*(y - up_y);
+  sum = sum + clamped_pixel(right_x, down_y, c)*(x - left_x)*(y - up_y);
+
   // TODO: Your code here
   
-  NOT_IMPLEMENTED();
-  
-  
-  return 0;
+  return sum;
   }
 
 // HW1 #1
@@ -63,13 +71,13 @@ Image nearest_resize(const Image& im, int w, int h)
 // return new Image of size (w,h,im.c)
 Image bilinear_resize(const Image& im, int w, int h)
   {
-  
-  // TODO: Your code here
-  
-  NOT_IMPLEMENTED();
-  
-  
-  return Image();
+  Image ret(w,h,im.c);
+  float x_rescale = w/((float) im.w);
+  float y_rescale = h/((float) im.h);
+  for (int i = 0; i < w; i ++) for (int j = 0; j < h; j++) for (int ch = 0; ch < im.c; ch ++){
+      ret(i,j,ch) = im.pixel_bilinear((i + .5)/x_rescale - .5, (j + .5)/y_rescale - .5, ch);
+  }
+  return ret;
   }
 
 
