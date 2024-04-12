@@ -4,6 +4,7 @@
 #include <math.h>
 #include <assert.h>
 #include "image.h"
+//#include <iostream>
 
 #define M_PI 3.14159265358979323846
 
@@ -12,9 +13,16 @@
 void l1_normalize(Image& im)
   {
   
-  // TODO: Normalize each channel
-  NOT_IMPLEMENTED();
-  
+  for(int ch = 0; ch < im.c; ch ++){
+    float sum = 0;
+    for(int i = 0; i < im.w; i++)for(int j = 0; j< im.h; j++){
+      sum = sum+im(i,j,ch);
+    }
+
+    for(int i = 0; i < im.w; i++)for(int j = 0; j< im.h; j++){
+      im(i,j,ch) = im(i,j,ch)/sum;
+    }
+  }
   
   }
 
@@ -26,9 +34,11 @@ Image make_box_filter(int w)
   assert(w%2); // w needs to be odd
   
   // TODO: Implement the filter
-  NOT_IMPLEMENTED();
-  
-  return Image(1,1,1);
+  Image box_filter = Image(w,w,1);
+  for(int i = 0; i < w; i++) for(int j = 0; j < w; j++){
+    box_filter(i,j,0) = 1/((float) w*w);
+  }
+  return box_filter;
   }
 
 // HW1 #2.2
@@ -39,16 +49,31 @@ Image make_box_filter(int w)
 Image convolve_image(const Image& im, const Image& filter, bool preserve)
   {
   assert(filter.c==1);
-  Image ret;
+  Image ret = Image(im.w, im.h, im.c);
+  for(int i = 0; i < im.w; i++) for(int j = 0; j < im.h; j++)for(int ch = 0; ch < im.c; ch++){
+    float sum = 0;
+    for(int k = 0;  k < filter.w; k++)for(int l = 0; l < filter.h; l++){
+      sum = sum + im.clamped_pixel(i - ((int) filter.w/2) + k,j - ((int) filter.w/2) + l,ch)*filter(k,l,0);
+    }
+    ret(i,j,ch) = sum;
+  }
+
   // This is the case when we need to use the function clamped_pixel(x,y,c).
   // Otherwise you'll have to manually check whether the filter goes out of bounds
-  
+  //if (filter.w > 1){
+  //  ret.save_image("output/ret_test");
+  //}
   // TODO: Make sure you set the sizes of ret properly. Use ret=Image(w,h,c) to reset ret
   // TODO: Do the convolution operator
-  NOT_IMPLEMENTED();
-  
+
   // Make sure to return ret and not im. This is just a placeholder
-  return im;
+  if (preserve) return ret;
+  
+  Image real_ret = Image(im.w,im.h, 1);
+  for(int i = 0; i < im.w; i++) for(int j = 0; j < im.h; j++)for(int ch = 0; ch < im.c; ch++){
+   real_ret(i,j,0) = real_ret(i,j,0) + ret(i,j,ch);
+  }
+  return real_ret;
   }
 
 // HW1 #2.3
