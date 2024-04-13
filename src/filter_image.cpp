@@ -80,21 +80,34 @@ Image convolve_image(const Image& im, const Image& filter, bool preserve)
 // returns basic 3x3 high-pass filter
 Image make_highpass_filter()
   {
-  // TODO: Implement the filter
-  NOT_IMPLEMENTED();
-  
-  return Image(1,1,1);
-  
+  Image highpass_filter = Image(3,3,1);
+  highpass_filter(0,0,0) = 0;
+  highpass_filter(1,0,0) = -1;
+  highpass_filter(2,0,0) = 0;
+  highpass_filter(0,1,0) = -1;
+  highpass_filter(1,1,0) = 4;
+  highpass_filter(2,1,0) = -1;
+  highpass_filter(0,2,0) = 0;
+  highpass_filter(1,2,0) = -1;
+  highpass_filter(2,2,0) = 0;
+  return highpass_filter;
   }
 
 // HW1 #2.3
 // returns basic 3x3 sharpen filter
 Image make_sharpen_filter()
   {
-  // TODO: Implement the filter
-  NOT_IMPLEMENTED();
-  
-  return Image(1,1,1);
+  Image sharpen_filter = Image(3,3,1);
+  sharpen_filter(0,0,0) = 0;
+  sharpen_filter(1,0,0) = -1;
+  sharpen_filter(2,0,0) = 0;
+  sharpen_filter(0,1,0) = -1;
+  sharpen_filter(1,1,0) = 5;
+  sharpen_filter(2,1,0) = -1;
+  sharpen_filter(0,2,0) = 0;
+  sharpen_filter(1,2,0) = -1;
+  sharpen_filter(2,2,0) = 0;
+  return sharpen_filter;
   
   }
 
@@ -102,10 +115,17 @@ Image make_sharpen_filter()
 // returns basic 3x3 emboss filter
 Image make_emboss_filter()
   {
-  // TODO: Implement the filter
-  NOT_IMPLEMENTED();
-  
-  return Image(1,1,1);
+  Image emboss_filter = Image(3,3,1);
+  emboss_filter(0,0,0) = -2;
+  emboss_filter(1,0,0) = -1;
+  emboss_filter(2,0,0) = 0;
+  emboss_filter(0,1,0) = -1;
+  emboss_filter(1,1,0) = 1;
+  emboss_filter(2,1,0) = 1;
+  emboss_filter(0,2,0) = 0;
+  emboss_filter(1,2,0) = 1;
+  emboss_filter(2,2,0) = 2;
+  return emboss_filter;
   
   }
 
