@@ -4,7 +4,7 @@
 #include <math.h>
 #include <assert.h>
 #include "image.h"
-//#include <iostream>
+#include <iostream>
 
 #define M_PI 3.14159265358979323846
 
@@ -134,10 +134,24 @@ Image make_emboss_filter()
 // returns basic gaussian filter
 Image make_gaussian_filter(float sigma)
   {
+    int w = (int) (6*(sigma)) + 1;
+    if (w%2 == 0) w = w + 1;
   // TODO: Implement the filter
-  NOT_IMPLEMENTED();
-  
-  return Image(1,1,1);
+  Image gaussian_filter = Image(w,w,1);
+  for (int i = 0; i < w; i++) for(int j = 0; j < w; j++){
+    float coeff = 1/(2*M_PI*sigma*sigma);
+    float pow = -((i - w/2)*(i - w/2) + (j - w/2)*(j - w/2))/(2*sigma*sigma);
+    gaussian_filter(i,j,0) = coeff*exp(pow);
+    if(i + j == 0){
+      cout << w;
+      cout << "\n";
+      cout << coeff; 
+      cout << "\n";
+      cout << pow; 
+    }
+  }
+  l1_normalize(gaussian_filter);
+  return gaussian_filter;
   
   }
 
