@@ -142,13 +142,6 @@ Image make_gaussian_filter(float sigma)
     float coeff = 1/(2*M_PI*sigma*sigma);
     float pow = -((i - w/2)*(i - w/2) + (j - w/2)*(j - w/2))/(2*sigma*sigma);
     gaussian_filter(i,j,0) = coeff*exp(pow);
-    if(i + j == 0){
-      cout << w;
-      cout << "\n";
-      cout << coeff; 
-      cout << "\n";
-      cout << pow; 
-    }
   }
   l1_normalize(gaussian_filter);
   return gaussian_filter;
@@ -163,12 +156,12 @@ Image make_gaussian_filter(float sigma)
 Image add_image(const Image& a, const Image& b)
   {
   assert(a.w==b.w && a.h==b.h && a.c==b.c); // assure images are the same size
+  Image sum = Image(a.w, a.h, a.c);
+  for(int i = 0; i < a.w; i++) for(int j = 0; j < a.h; j++)for(int ch = 0; ch < a.c; ch++){
+   sum(i,j,ch) = a(i,j,ch) + b(i,j,ch);
+  }
   
-  // TODO: Implement addition
-  NOT_IMPLEMENTED();
-  
-  return a;
-  
+  return sum;
   }
 
 // HW1 #3
@@ -178,32 +171,47 @@ Image add_image(const Image& a, const Image& b)
 Image sub_image(const Image& a, const Image& b)
   {
   assert(a.w==b.w && a.h==b.h && a.c==b.c); // assure images are the same size
+  Image diff = Image(a.w, a.h, a.c);
+  for(int i = 0; i < a.w; i++) for(int j = 0; j < a.h; j++)for(int ch = 0; ch < a.c; ch++){
+   diff(i,j,ch) = a(i,j,ch) - b(i,j,ch);
+  }
   
-  // TODO: Implement subtraction
-  NOT_IMPLEMENTED();
-  
-  return a;
-  
+  return diff;
   }
 
 // HW1 #4.1
 // returns basic GX filter
 Image make_gx_filter()
   {
-  // TODO: Implement the filter
-  NOT_IMPLEMENTED();
+  Image GX_filter = Image(3,3,1);
+  GX_filter(0,0,0) = -1;
+  GX_filter(1,0,0) = 0;
+  GX_filter(2,0,0) = 1;
+  GX_filter(0,1,0) = -2;
+  GX_filter(1,1,0) = 0;
+  GX_filter(2,1,0) = 2;
+  GX_filter(0,2,0) = -1;
+  GX_filter(1,2,0) = 0;
+  GX_filter(2,2,0) = 1;
+  return GX_filter;
   
-  return Image(1,1,1);
   }
 
 // HW1 #4.1
 // returns basic GY filter
 Image make_gy_filter()
   {
-  // TODO: Implement the filter
-  NOT_IMPLEMENTED();
-  
-  return Image(1,1,1);
+  Image GY_filter = Image(3,3,1);
+  GY_filter(0,0,0) = -1;
+  GY_filter(1,0,0) = -2;
+  GY_filter(2,0,0) = -1;
+  GY_filter(0,1,0) = 0;
+  GY_filter(1,1,0) = 0;
+  GY_filter(2,1,0) = 0;
+  GY_filter(0,2,0) = 1;
+  GY_filter(1,2,0) = 2;
+  GY_filter(2,2,0) = 1;
+  return GY_filter;
   }
 
 // HW1 #4.2
@@ -212,8 +220,21 @@ void feature_normalize(Image& im)
   {
   assert(im.w*im.h); // assure we have non-empty image
   
-  // TODO: Normalize the features for each channel
-  NOT_IMPLEMENTED();
+  for(int ch = 0; ch < im.c; ch ++){
+    //Loop through once, determine the minimum and the maximum
+    float mini = im(0,0,ch);
+    float maxi = im(0,0,ch);
+    for(int i = 0; i < im.w; i ++)for(int j = 0; j < im.h; j ++){
+      mini = min(mini, im(i,j,ch));
+      maxi = max(maxi, im(i,j,ch));
+    }
+    float range = maxi - mini;
+    float one_over_range = 0;
+    if (range != 0) one_over_range = 1/range;
+    for(int i = 0; i < im.w; i ++)for(int j = 0; j < im.h; j ++){
+      im(i,j,ch) = (im(i,j,ch) - mini)/range;
+    }
+  }
   
   }
 
@@ -239,9 +260,19 @@ void feature_normalize_total(Image& im)
 pair<Image,Image> sobel_image(const Image& im)
   {
   // TODO: Your code here
-  NOT_IMPLEMENTED();
-  
-  return {im,im};
+  //First we computer the images G_x and G_y. 
+  Image G_x_filter = make_gx_filter();
+  Image G_y_filter = make_gy_filter();
+  Image G_x = convolve_image(im, G_x_filter, false);
+  Image G_y = convolve_image(im, G_y_filter, false);
+
+  Image Mag = Image(G_x.w, G_x.h, 1);
+  Image Dir = Image(G_x.w, G_x.h, 1);
+  for(int i = 0; i < Mag.w; i++) for(int j = 0; j < Mag.h; j++){
+    Mag(i,j,0) = sqrt(G_x(i,j,0)*G_x(i,j,0) + G_y(i,j,0)*G_y(i,j,0));
+    Dir(i,j,0) = atan2(G_y(i,j,0), G_x(i,j,0));
+  }
+  return {Mag,Dir};
   }
 
 
@@ -250,11 +281,22 @@ pair<Image,Image> sobel_image(const Image& im)
 // returns the colorized Sobel image of the same size
 Image colorize_sobel(const Image& im)
   {
-  
+  pair<Image,Image> res = sobel_image(im);
+  Image mag = res.first;
+  Image theta = res.second;
+
+  feature_normalize(mag);
+  feature_normalize(theta);
+  Image im2 = im;
+  rgb_to_hsv(im2);
+  for(int i = 0; i < im2.w; i++) for(int j = 0; j < im2.h; j++){
+    im2(i,j,2) = mag(i,j,0);
+    im2(i,j,1) = theta(i,j,0)/(2*M_PI) + .5;
+  }
+  hsv_to_rgb(im2);
   // TODO: Your code here
-  NOT_IMPLEMENTED();
   
-  return im;
+  return im2;
   }
 
 
